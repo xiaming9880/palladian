@@ -37,15 +37,23 @@ public class PalladianLocationExtractor extends LocationExtractor {
 
     private final LocationDisambiguation disambiguation;
 
+    private final Set<Language> languages;
+
     private static final AddressTagger addressTagger = AddressTagger.INSTANCE;
 
     private static final CoordinateTagger coordinateTagger = CoordinateTagger.INSTANCE;
 
     public PalladianLocationExtractor(LocationSource locationSource, ClassifyingTagger tagger,
-            LocationDisambiguation disambiguation) {
+            LocationDisambiguation disambiguation, Set<Language> languages) {
         this.locationSource = locationSource;
         this.tagger = tagger;
         this.disambiguation = disambiguation;
+        this.languages = languages;
+    }
+    
+    public PalladianLocationExtractor(LocationSource locationSource, ClassifyingTagger tagger,
+            LocationDisambiguation disambiguation) {
+        this(locationSource, DefaultCandidateExtractor.INSTANCE, disambiguation, EnumSet.of(Language.ENGLISH));
     }
 
     public PalladianLocationExtractor(LocationSource locationSource, LocationDisambiguation disambiguation) {
@@ -82,13 +90,13 @@ public class PalladianLocationExtractor extends LocationExtractor {
         return result;
     }
 
-    public static <A extends Annotation> MultiMap<A, Location> fetchLocations(LocationSource source, List<A> annotations) {
+    public <A extends Annotation> MultiMap<A, Location> fetchLocations(LocationSource source, List<A> annotations) {
         Set<String> valuesToRetrieve = new HashSet<>();
         for (Annotation annotation : annotations) {
             String entityValue = LocationExtractorUtils.normalizeName(annotation.getValue()).toLowerCase();
             valuesToRetrieve.add(entityValue);
         }
-        MultiMap<String, Location> lookup = source.getLocations(valuesToRetrieve, EnumSet.of(Language.ENGLISH));
+        MultiMap<String, Location> lookup = source.getLocations(valuesToRetrieve, languages);
         MultiMap<A, Location> result = DefaultMultiMap.createWithSet();
         for (A annotation : annotations) {
             String entityValue = LocationExtractorUtils.normalizeName(annotation.getValue()).toLowerCase();
